@@ -8,8 +8,9 @@ public:
 	Net();
 	~Net();
 
-	void Build(int numHiddenLayers, int numInput);
+	void Build(int numHiddenLayers, vector<int> layerSizes);
 
-	vector<Layer*> firstHiddenLayers;
+
+	Layer* firstHiddenLayer;
 };
 

@@ -12,6 +12,7 @@ public:
 	~Layer();
 
 	void Init(int numInput, int numOutput);
+	void InitWeights();
 
 	void ForwardPropagate(vector<double> input);
 	void BackwardPropagate(vector<double> deltas);
@@ -21,9 +22,8 @@ public:
 	vector<vector<double>> weights;
 	vector<double> bias;
 
-	vector<Neuron*> listNeurons;
-
 	Layer* connectedLayer;
+	Layer * previousLayer;
 
 	ActivationFunction * func = nullptr;
 };

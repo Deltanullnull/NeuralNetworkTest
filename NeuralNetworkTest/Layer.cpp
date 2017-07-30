@@ -1,6 +1,6 @@
 #include "Layer.h"
-
-
+#include <random>
+#include "MathOperations.h"
 
 Layer::Layer()
 {
@@ -21,9 +21,30 @@ void Layer::Init(int numInput, int numOutput)
 		weightVector.resize(numOutput);
 	}
 
-	// TODO randomly initialize values between 0 and 1
-
 	
+	
+}
+
+void Layer::InitWeights()
+{
+	int numInput = weights.size();
+
+	// randomly initialize values between 0 and 1
+	random_device rd;
+	mt19937 gen(rd());
+
+	uniform_real_distribution<> dis(0, 1);
+
+	for (int y = 0; y < numInput; y++)
+	{
+		int numOutput = weights.at(y).size();
+
+		for (int x = 0; x < numOutput; x++)
+		{
+			weights.at(y).at(x) = dis(gen);
+		}
+	}
+
 }
 
 void Layer::ForwardPropagate(vector<double> input)
@@ -37,10 +58,19 @@ void Layer::ForwardPropagate(vector<double> input)
 	{
 		connectedLayer->ForwardPropagate(output);
 	}
+
 }
 
 void Layer::BackwardPropagate(vector<double> deltas)
 {
+	vector<double> deltasCurrent;
+
+	deltasCurrent = MathOperations::MatrixMultiplication(weights, deltas, true);
+
+	if (previousLayer != nullptr)
+	{
+		previousLayer->BackwardPropagate(deltasCurrent);
+	}
 
 }
 
