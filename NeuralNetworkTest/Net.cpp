@@ -13,7 +13,7 @@ Net::~Net()
 
 void Net::Build(int numInput, vector<int> layerSizes)
 {
-	Layer * current;
+	Layer * current = nullptr;
 
 	int numHiddenLayers = layerSizes.size();
 
@@ -24,13 +24,33 @@ void Net::Build(int numInput, vector<int> layerSizes)
 
 	current = firstHiddenLayer;
 
-	for (int i = 0; i < numHiddenLayers - 1; i++)
+	for (int i = 1; i < numHiddenLayers; i++)
 	{
 		Layer * connected = new Layer();
-		
+		numInput = numOutput;
+		numOutput = layerSizes.at(i);
+		connected->Init(numInput, numOutput);
+
 		current->connectedLayer = connected;
 		connected->previousLayer = current;
 
 		current = connected;
+	}
+}
+
+void Net::Train(vector<vector<double>> X, vector<double> y, int numEpochs)
+{
+	if (firstHiddenLayer != nullptr)
+	{
+		for (int e = 0; e < numEpochs; e++)
+		{
+			int numTrainingData = X.size();
+			for (int i = 0; i < numTrainingData; i++)
+			{
+				firstHiddenLayer->ForwardPropagate(X.at(i), y.at(i));
+			}
+		}
+
+		
 	}
 }

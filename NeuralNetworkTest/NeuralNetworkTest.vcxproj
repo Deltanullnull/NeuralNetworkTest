@@ -112,6 +112,7 @@
   <ItemGroup>
     <ClCompile Include="ActivationFunctions.cpp" />
     <ClCompile Include="CostFunction.cpp" />
+    <ClCompile Include="CrossEntropyLoss.cpp" />
     <ClCompile Include="JacobiFunction.cpp" />
     <ClCompile Include="Layer.cpp" />
     <ClCompile Include="LossFunction.cpp" />
@@ -124,6 +125,7 @@
   <ItemGroup>
     <ClInclude Include="ActivationFunctions.h" />
     <ClInclude Include="CostFunction.h" />
+    <ClInclude Include="CrossEntropyLoss.h" />
     <ClInclude Include="JacobiFunction.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="LossFunction.h" />

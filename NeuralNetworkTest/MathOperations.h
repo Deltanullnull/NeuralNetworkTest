@@ -10,6 +10,12 @@ public:
 	MathOperations();
 	~MathOperations();
 
+	static vector<double> VectorAddition(vector<double> A, vector<double> B);
+	static vector<double> VectorSubtraction(vector<double> A, vector<double> B);
+
+	static vector<double> ElementwiseMultiplication(vector<double> A, vector<double> B);
 	static vector<double> MatrixMultiplication(vector<vector<double>> A, vector<double> x, bool transpose);
+
+	static vector<vector<double>> VectorMultiplication(vector<double> a, vector<double> b);
 };
 

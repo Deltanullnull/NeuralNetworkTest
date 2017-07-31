@@ -11,3 +11,4 @@ ActivationFunction::~ActivationFunction()
 {
 }
 */
+

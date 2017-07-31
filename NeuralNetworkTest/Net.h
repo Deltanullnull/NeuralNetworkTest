@@ -8,9 +8,9 @@ public:
 	Net();
 	~Net();
 
-	void Build(int numHiddenLayers, vector<int> layerSizes);
+	void Build(int numInput, vector<int> layerSizes);
+	void Train(vector<vector<double>> X, vector<double> y, int numEpochs = 2000);
 
-
-	Layer* firstHiddenLayer;
+	Layer* firstHiddenLayer = nullptr;
 };
 
