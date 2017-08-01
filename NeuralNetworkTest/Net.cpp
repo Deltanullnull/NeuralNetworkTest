@@ -45,12 +45,45 @@ void Net::Train(vector<vector<double>> X, vector<double> y, int numEpochs)
 		for (int e = 0; e < numEpochs; e++)
 		{
 			int numTrainingData = X.size();
+
+			firstHiddenLayer->SetDeltaToZero();
+
 			for (int i = 0; i < numTrainingData; i++)
 			{
 				firstHiddenLayer->ForwardPropagate(X.at(i), y.at(i));
 			}
 		}
 
-		
 	}
+}
+
+void Net::Train(Eigen::MatrixXd X, Eigen::VectorXd y, int numEpochs)
+{
+	if (firstHiddenLayer != nullptr)
+	{
+		firstHiddenLayer->SetNumSamples(X.rows());
+
+		//for (int e = 0; e < numEpochs; e++)
+		{
+			int numTrainingData = X.size();
+			for (int i = 0; i < numTrainingData; i++)
+			{
+				firstHiddenLayer->ForwardPropagate(X.row(i), y(i));
+			}
+		}
+
+	}
+}
+
+double Net::ComputeLossFunction(vector<vector<double>> X, vector<double> y)
+{
+	double cost = 0.0;
+	int numSamples = X.size();
+
+	if (firstHiddenLayer != nullptr)
+	{
+		cost = firstHiddenLayer->ComputeLoss(X, y, X);
+	}
+
+	return cost / numSamples;
 }

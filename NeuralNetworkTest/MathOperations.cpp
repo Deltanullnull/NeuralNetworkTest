@@ -51,6 +51,39 @@ vector<double> MathOperations::ElementwiseMultiplication(vector<double> A, vecto
 	return y;
 }
 
+vector<vector<double>> MathOperations::MatrixAddition(vector<vector<double>> A, vector<vector<double>> B)
+{
+	vector<vector<double>> X;
+
+	if (A.size() == 0)
+		return X;
+
+	int rows = A.size();
+	int cols = A.at(0).size();
+
+	X.resize(rows);
+	
+
+	for (int r = 0; r < rows; r++)
+	{
+		X.at(r).resize(cols);
+
+		for (int c = 0; c < cols; c++)
+		{
+			double valA = A.at(r).at(c);
+			double valB = B.at(r).at(c);
+
+			double value = valA * valB;
+
+			X.at(r).at(c) = value;
+		}
+
+
+	}
+
+	return X;
+}
+
 vector<double> MathOperations::MatrixMultiplication(vector<vector<double>> A, vector<double> x, bool transpose)
 {
 	vector<double> b;

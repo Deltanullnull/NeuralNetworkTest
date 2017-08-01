@@ -48,3 +48,31 @@ vector<double> Sigmoid::Derivative(vector<double> x_vector)
 
 	return g;
 }
+
+Eigen::VectorXd Sigmoid::Compute(Eigen::VectorXd X)
+{
+	Eigen::VectorXd g(X.rows());
+
+	g.setZero();
+
+	for (int i = 0; i < g.rows(); i++)
+	{
+		g(i) = Compute(X(i));
+	}
+
+	return g;
+}
+
+Eigen::VectorXd Sigmoid::Derivative(Eigen::VectorXd X)
+{
+	Eigen::VectorXd g(X.rows());
+
+	g.setZero();
+
+	for (int i = 0; i < g.rows(); i++)
+	{
+		g(i) = Derivative(X(i));
+	}
+
+	return g;
+}

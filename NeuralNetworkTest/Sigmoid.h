@@ -12,5 +12,8 @@ public:
 
 	vector<double> Compute(vector<double> x_vector);
 	vector<double> Derivative(vector<double> x_vector);
+
+	Eigen::VectorXd Compute(Eigen::VectorXd X);
+	Eigen::VectorXd Derivative(Eigen::VectorXd X);
 };
 

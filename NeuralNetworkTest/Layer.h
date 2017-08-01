@@ -3,6 +3,8 @@
 #include "Sigmoid.h"
 #include "Neuron.h"
 
+#include <Eigen/Dense>
+
 using namespace std;
 
 class Layer
@@ -15,14 +17,38 @@ public:
 	void InitWeights();
 
 	void ForwardPropagate(vector<double> input, double y);
+
+	void ForwardPropagate(Eigen::VectorXd input, double y);
+
 	void BackwardPropagate(vector<double> deltas);
 
-	vector<double> ComputeWeightedSum(vector<double> input);
+	void BackwardPropagate(Eigen::VectorXd deltas);
+
+	void SetDeltaToZero();
+
+	void UpdateWeights(int numSamples);
+
+	void ComputeWeightedSum(vector<double> input, vector<double>& outputActivation, vector<double>& outputZ);
+
+	double ComputeLoss(vector<vector<double>> X, vector<double> y, vector<vector<double>> yPred);
+
+	void SetNumSamples(int numSamples);
+
+	
+	Eigen::MatrixXd WeightMatrix;
+	Eigen::VectorXd BiasVector;
+
+	Eigen::VectorXd VectorZ;
+	Eigen::VectorXd ActivationVector;
+
+	Eigen::MatrixXd DeltaMatrix;
+	Eigen::MatrixXd PartialDerivatives;
 
 	vector<vector<double>> weights;
 	vector<double> bias;
 
 	vector<double> zVector;
+	vector<double> aVector;
 
 	vector<vector<double>> Deltas;
 
