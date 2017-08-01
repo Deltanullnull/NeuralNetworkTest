@@ -2,9 +2,10 @@
 #include <random>
 #include "MathOperations.h"
 
-Layer::Layer()
+Layer::Layer(bool isHiddenLayer)
 {
 	Func = new Sigmoid();
+	this->isHiddenLayer = isHiddenLayer;
 }
 
 
@@ -14,50 +15,27 @@ Layer::~Layer()
 
 void Layer::Init(int numInput, int numOutput)
 {
-	
-	//WeightMatrix = Eigen::ArrayXXd::Random(numInput, numOutput) * 0.5 + 0.5;
-	WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput) * 0.5 + 0.5;
-
-	for (int v = 0; v < WeightMatrix.rows(); v++)
+	if (isHiddenLayer)
 	{
-		for (int u = 0; u < WeightMatrix.cols(); u++)
-		{
-			printf("%lf ", WeightMatrix(v, u));
-		}
+		WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput) * 0.5 + 0.5;
 
-		printf("\n");
+		cout << "WeightMatrix: " << endl;
+		cout << WeightMatrix << endl;
+
+		BiasVector = Eigen::ArrayXd::Random(numOutput) * 0.5 + 0.5;
+
+		cout << "BiasVector: " << endl;
+		cout << BiasVector << endl;
+
+		DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput);
+
+		cout << "DeltaMatrix: " << endl;
+		cout << DeltaMatrix << endl;
 	}
-
-	BiasVector = Eigen::ArrayXd::Random(numOutput) * 0.5 + 0.5;
-
-	for (int v = 0; v < BiasVector.rows(); v++)
-	{
-		printf("%lf ", BiasVector(v));
-	
-		printf("\n");
-	}
-
-	//DeltaMatrix = Eigen::MatrixXd::Zero(numInput, numOutput);
-	DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput);
-
 	PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
 
 	VectorZ = Eigen::VectorXd(numOutput);
 
-	/*weights.resize(numInput);
-	Deltas.resize(numInput);
-
-	for (vector<double>& weightVector : weights)
-	{
-		weightVector.resize(numOutput);
-		Deltas.resize(numOutput);
-	}
-
-	bias.resize(numOutput);
-
-	zVector.resize(numOutput);*/
-	
-	//InitWeights();
 }
 
 void Layer::InitWeights()
@@ -121,14 +99,20 @@ void Layer::ForwardPropagate(vector<double> input, double y)
 
 void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 {
-	int numOutput = WeightMatrix.rows();
-	int numCols = input.size();
+	if (previousLayer == nullptr)
+	{
+		ActivationVector = input;
+	}
+	else
+	{
+		// z = W * x + b
+		VectorZ = previousLayer->WeightMatrix * input + previousLayer->BiasVector;
 
-	// z = W * x + b
-	VectorZ = WeightMatrix * input + BiasVector;
+		// a = g(z)
+		ActivationVector = Func->Compute(VectorZ);
+	}
 
-	// a = g(z)
-	ActivationVector = Func->Compute(VectorZ);
+	
 
 	if (connectedLayer != nullptr)
 	{
@@ -173,13 +157,18 @@ void Layer::BackwardPropagate(Eigen::VectorXd deltas)
 {
 	Eigen::VectorXd DeltasCurrent = WeightMatrix.transpose() * deltas;
 
-	Eigen::VectorXd gDeriv = Func->Derivative(DeltasCurrent);
+	Eigen::VectorXd gDeriv = Func->Derivative(VectorZ);
 
 	DeltasCurrent = DeltasCurrent.cwiseProduct(gDeriv);
 
 	DeltaMatrix = DeltaMatrix + deltas * ActivationVector.transpose();
 
 	PartialDerivatives = (DeltaMatrix + regLambda * WeightMatrix);
+
+	if (previousLayer != nullptr)
+	{
+		BackwardPropagate(DeltasCurrent);
+	}
 }
 
 void Layer::SetDeltaToZero()
@@ -218,6 +207,55 @@ void Layer::ComputeWeightedSum(vector<double> input, vector<double>& outputActiv
 	// a = g(z)
 	outputActivation = Func->Compute(outputZ);
 
+}
+
+double Layer::ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd yPred)
+{
+	double value = 0.0;
+
+	for (int v = 0; v < WeightMatrix.rows(); v++)
+	{
+		for (int u = 0; u < WeightMatrix.cols(); u++)
+		{
+			double theta = WeightMatrix(v, u);
+
+			value += (regLambda / 2.0) * pow(theta, 2.0);
+		}
+	}
+
+	Eigen::MatrixXd newPred(yPred.rows(), yPred.cols());
+
+	for (int i = 0; i < yPred.rows(); i++)
+	{
+		// a = g(z)
+		newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i) + BiasVector);
+
+	}
+
+	if (connectedLayer != nullptr)
+	{
+		value += ComputeLoss(X, y, newPred);
+	}
+	else
+	{
+		for (int v = 0; v < newPred.size(); v++)
+		{
+			Eigen::VectorXd yPredVector = newPred.row(v);
+
+			int numClasses = newPred.rows();
+
+			Eigen::VectorXd YTrueVector = Eigen::VectorXd::Zero(numClasses);
+
+			YTrueVector((int)v) = 1.0;
+
+			for (int u = 0; u < numClasses; u++)
+			{
+				value += YTrueVector[u] * log(yPredVector[u]) + (1.0 - YTrueVector[u]) * log(1.0 - yPredVector[u]);
+			}
+		}
+	}
+
+	return value;
 }
 
 double Layer::ComputeLoss(vector<vector<double>> X, vector<double> y, vector<vector<double>> yPred)

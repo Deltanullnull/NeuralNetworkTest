@@ -3,6 +3,8 @@
 #include "Sigmoid.h"
 #include "Neuron.h"
 
+#include <iostream>
+
 #include <Eigen/Dense>
 
 using namespace std;
@@ -10,7 +12,7 @@ using namespace std;
 class Layer
 {
 public:
-	Layer();
+	Layer(bool isHiddenLayer);
 	~Layer();
 
 	void Init(int numInput, int numOutput);
@@ -29,6 +31,8 @@ public:
 	void UpdateWeights(int numSamples);
 
 	void ComputeWeightedSum(vector<double> input, vector<double>& outputActivation, vector<double>& outputZ);
+
+	double ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd yPred);
 
 	double ComputeLoss(vector<vector<double>> X, vector<double> y, vector<vector<double>> yPred);
 
@@ -59,5 +63,7 @@ public:
 
 	double regLambda = 0.01; // Learning rate
 	double epsilon = 0.01; // Regularization strength
+
+	bool isHiddenLayer = true;
 };
 

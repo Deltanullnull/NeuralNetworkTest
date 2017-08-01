@@ -19,14 +19,14 @@ void Net::Build(int numInput, vector<int> layerSizes)
 
 	int numOutput = layerSizes.at(0);
 
-	firstHiddenLayer = new Layer();
+	firstHiddenLayer = new Layer(true);
 	firstHiddenLayer->Init(numInput, numOutput);
 
 	current = firstHiddenLayer;
 
 	for (int i = 1; i < numHiddenLayers; i++)
 	{
-		Layer * connected = new Layer();
+		Layer * connected = new Layer(true);
 		numInput = numOutput;
 		numOutput = layerSizes.at(i);
 		connected->Init(numInput, numOutput);
@@ -61,10 +61,11 @@ void Net::Train(Eigen::MatrixXd X, Eigen::VectorXd y, int numEpochs)
 {
 	if (firstHiddenLayer != nullptr)
 	{
-		firstHiddenLayer->SetNumSamples(X.rows());
-
-		//for (int e = 0; e < numEpochs; e++)
+		
+		for (int e = 0; e < numEpochs; e++)
 		{
+			firstHiddenLayer->SetDeltaToZero();
+
 			int numTrainingData = X.size();
 			for (int i = 0; i < numTrainingData; i++)
 			{

@@ -35,7 +35,7 @@ int main()
 
 	layerSizes.push_back(3);
 	layerSizes.push_back(4);
-	layerSizes.push_back(numClasses);
+	//layerSizes.push_back(numClasses);
 
 	neuralNetwork->Build(numFeatures, layerSizes);
 
