@@ -40,7 +40,7 @@ public:
 
 	
 	Eigen::MatrixXd WeightMatrix;
-	Eigen::VectorXd BiasVector;
+	//Eigen::VectorXd BiasVector;
 
 	Eigen::VectorXd VectorZ;
 	Eigen::VectorXd ActivationVector;

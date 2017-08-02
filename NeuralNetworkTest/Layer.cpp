@@ -17,24 +17,27 @@ void Layer::Init(int numInput, int numOutput)
 {
 	if (numOutput > 0)
 	{
-		WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput) * 0.5 + 0.5;
+		//WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput) * 0.5 + 0.5;
+		WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput + 1) * 0.5 + 0.5;
 
 		cout << "WeightMatrix: " << endl;
 		cout << WeightMatrix << endl;
 
-		BiasVector = Eigen::ArrayXd::Random(numOutput) * 0.5 + 0.5;
+		//BiasVector = Eigen::ArrayXd::Random(numOutput) * 0.5 + 0.5;
 
-		cout << "BiasVector: " << endl;
-		cout << BiasVector << endl;
+		//cout << "BiasVector: " << endl;
+		//cout << BiasVector << endl;
 
-		DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput);
+		//DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput);
+		DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput + 1);
 
 		cout << "DeltaMatrix: " << endl;
 		cout << DeltaMatrix << endl;
 	
-		PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
+		//PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
+		PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput + 1);
 
-		VectorZ = Eigen::VectorXd(numOutput);
+		//VectorZ = Eigen::VectorXd(numOutput);
 	}
 }
 
@@ -99,12 +102,14 @@ void Layer::ForwardPropagate(vector<double> input, double y)
 
 void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 {
+	
+	
 
 	cout << "Going to next layer" << endl;
 
 	if (previousLayer == nullptr)
 	{
-		if (input.rows() != WeightMatrix.cols())
+		if (input.rows() + 1 != WeightMatrix.cols())
 		{
 			cerr << "Error! Data input size does not match layer input size. Abort!" << endl;
 			exit(-1);
@@ -114,8 +119,18 @@ void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 	}
 	else
 	{
+		Eigen::VectorXd InputWithBias(input.rows() + 1);
+
+		InputWithBias[0] = +1;
+
+		for (int i = 0; i < input.rows(); i++)
+		{
+			InputWithBias[i + 1] = input[i];
+		}
+
 		// z = W * x + b
-		VectorZ = previousLayer->WeightMatrix * input + previousLayer->BiasVector;
+		//VectorZ = previousLayer->WeightMatrix * input + previousLayer->BiasVector;
+		VectorZ = previousLayer->WeightMatrix * InputWithBias;
 
 		// a = g(z)
 		ActivationVector = Func->Compute(VectorZ);
@@ -237,8 +252,8 @@ double Layer::ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd 
 	for (int i = 0; i < yPred.rows(); i++)
 	{
 		// a = g(z)
-		newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i) + BiasVector);
-
+		//newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i) + BiasVector);
+		newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i));
 	}
 
 	if (connectedLayer != nullptr)
