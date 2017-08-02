@@ -31,13 +31,14 @@ int main()
 	cout << "Outer product: " << endl << outerProduct << endl;
 	
 
-	vector<int> layerSizes;
+	vector<int> hiddenLayerSizes;
 
-	layerSizes.push_back(3);
-	layerSizes.push_back(4);
+	//layerSizes.push_back(numFeatures);
+	hiddenLayerSizes.push_back(4);
+	hiddenLayerSizes.push_back(3);
 	//layerSizes.push_back(numClasses);
 
-	neuralNetwork->Build(numFeatures, layerSizes);
+	neuralNetwork->Build(numFeatures, hiddenLayerSizes, numClasses);
 
 	neuralNetwork->Train(X, y);
 

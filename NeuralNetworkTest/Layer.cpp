@@ -15,7 +15,7 @@ Layer::~Layer()
 
 void Layer::Init(int numInput, int numOutput)
 {
-	if (isHiddenLayer)
+	if (numOutput > 0)
 	{
 		WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput) * 0.5 + 0.5;
 
@@ -31,11 +31,11 @@ void Layer::Init(int numInput, int numOutput)
 
 		cout << "DeltaMatrix: " << endl;
 		cout << DeltaMatrix << endl;
+	
+		PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
+
+		VectorZ = Eigen::VectorXd(numOutput);
 	}
-	PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
-
-	VectorZ = Eigen::VectorXd(numOutput);
-
 }
 
 void Layer::InitWeights()
@@ -99,8 +99,17 @@ void Layer::ForwardPropagate(vector<double> input, double y)
 
 void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 {
+
+	cout << "Going to next layer" << endl;
+
 	if (previousLayer == nullptr)
 	{
+		if (input.rows() != WeightMatrix.cols())
+		{
+			cerr << "Error! Data input size does not match layer input size. Abort!" << endl;
+			exit(-1);
+		}
+
 		ActivationVector = input;
 	}
 	else
@@ -155,19 +164,19 @@ void Layer::BackwardPropagate(vector<double> deltas)
 
 void Layer::BackwardPropagate(Eigen::VectorXd deltas)
 {
-	Eigen::VectorXd DeltasCurrent = WeightMatrix.transpose() * deltas;
-
-	Eigen::VectorXd gDeriv = Func->Derivative(VectorZ);
-
-	DeltasCurrent = DeltasCurrent.cwiseProduct(gDeriv);
-
 	DeltaMatrix = DeltaMatrix + deltas * ActivationVector.transpose();
 
 	PartialDerivatives = (DeltaMatrix + regLambda * WeightMatrix);
 
 	if (previousLayer != nullptr)
 	{
-		BackwardPropagate(DeltasCurrent);
+		Eigen::VectorXd DeltasCurrent = WeightMatrix.transpose() * deltas;
+
+		Eigen::VectorXd gDeriv = Func->Derivative(VectorZ);
+
+		DeltasCurrent = DeltasCurrent.cwiseProduct(gDeriv);
+
+		previousLayer->BackwardPropagate(DeltasCurrent);
 	}
 }
 

@@ -11,7 +11,7 @@ public:
 	Net();
 	~Net();
 
-	void Build(int numInput, vector<int> layerSizes);
+	void Build(int numInput, vector<int> layerSizes, int numClasses);
 
 	void Train(vector<vector<double>> X, vector<double> y, int numEpochs = 2000);
 
