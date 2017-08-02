@@ -15,6 +15,8 @@ void Net::Build(int numInput, vector<int> layerSizes, int numClasses)
 {
 	Layer * current = nullptr;
 
+	this->numClasses = numClasses;
+
 	int numHiddenLayers = layerSizes.size();
 
 	int numOutput = layerSizes.at(0);
@@ -55,45 +57,83 @@ void Net::Build(int numInput, vector<int> layerSizes, int numClasses)
 	finalLayer->previousLayer = finalHiddenLayer;
 }
 
-void Net::Train(vector<vector<double>> X, vector<double> y, int numEpochs)
+Eigen::VectorXd Net::Evaluate(Eigen::VectorXd X)
 {
-	if (firstHiddenLayer != nullptr)
+	if (firstHiddenLayer == nullptr)
 	{
-		for (int e = 0; e < numEpochs; e++)
-		{
-			int numTrainingData = X.size();
-
-			firstHiddenLayer->SetDeltaToZero();
-
-			for (int i = 0; i < numTrainingData; i++)
-			{
-				firstHiddenLayer->ForwardPropagate(X.at(i), y.at(i));
-
-			}
-		}
-
+		cerr << "Error! No layers defined." << endl;
 	}
+
+	return firstHiddenLayer->Evaluate(X);
 }
+
 
 void Net::Train(Eigen::MatrixXd X, Eigen::VectorXd y, int numEpochs)
 {
 	if (firstHiddenLayer != nullptr)
 	{
 		
+		int numTrainingData = X.rows();
+
+		SetNumSamples(numTrainingData);
+
 		for (int e = 0; e < numEpochs; e++)
 		{
 			firstHiddenLayer->SetDeltaToZero();
 
-			int numTrainingData = X.size();
+			
 			for (int i = 0; i < numTrainingData; i++)
 			{
-				firstHiddenLayer->ForwardPropagate(X.row(i), y(i));
+				Eigen::VectorXd currentSample = X.row(i);
+				double currentLabel = y(i);
 
-				firstHiddenLayer->UpdateWeights(numTrainingData);
+				firstHiddenLayer->ForwardPropagate(currentSample, currentLabel);
+
+				firstHiddenLayer->UpdateWeights();
+			}
+
+			if (e % (numEpochs / 100) == 0)
+			{
+				cout << "Loss: " << ComputeLossFunction(X, y, numClasses) << endl;
 			}
 		}
 
 	}
+}
+
+double Net::ComputeLossFunction(Eigen::MatrixXd X, Eigen::VectorXd y, int numClasses)
+{
+	int numSamples = X.rows();
+
+	
+
+	if (firstHiddenLayer != nullptr)
+	{
+		double val = firstHiddenLayer->GetWeightSum() * firstHiddenLayer->regLambda / (2.0 * numSamples);
+
+		//  get sum of all weights
+
+		for (int i = 0; i < X.rows(); i++)
+		{
+			Eigen::VectorXd prediction = firstHiddenLayer->Evaluate(X.row(i));
+
+			Eigen::VectorXd VectorY = Eigen::VectorXd::Zero(numClasses);
+
+			int label = y[i];
+
+			VectorY(label) = 1.0;
+
+			for (int c = 0; c < numClasses; c++)
+			{
+				val += (VectorY(c) * log(prediction(c)) + (1 - VectorY(c)) * log(1 - prediction(c))) / (double) (-numSamples);
+			}
+
+		}
+
+		return val;
+	}
+
+	return 1e10;
 }
 
 double Net::ComputeLossFunction(vector<vector<double>> X, vector<double> y)
@@ -103,8 +143,13 @@ double Net::ComputeLossFunction(vector<vector<double>> X, vector<double> y)
 
 	if (firstHiddenLayer != nullptr)
 	{
-		cost = firstHiddenLayer->ComputeLoss(X, y, X);
+		//cost = firstHiddenLayer->ComputeLoss(X, y, X);
 	}
 
 	return cost / numSamples;
+}
+
+void Net::SetNumSamples(int numSamples)
+{
+	firstHiddenLayer->SetNumSamples(numSamples);
 }
