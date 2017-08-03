@@ -13,13 +13,19 @@ public:
 
 	void Build(int numInput, vector<int> layerSizes, int numClasses);
 
-	void Train(vector<vector<double>> X, vector<double> y, int numEpochs = 2000);
+	Eigen::VectorXd Evaluate(Eigen::VectorXd X);
 
-	void Train(Eigen::MatrixXd X, Eigen::VectorXd y, int numEpochs = 2000);
+	void Train(Eigen::MatrixXd X, Eigen::VectorXd y, int numEpochs = 10000);
+
+	double ComputeLossFunction(Eigen::MatrixXd X, Eigen::VectorXd y, int numClasses);
 
 	double ComputeLossFunction(vector<vector<double>> X, vector<double> y);
 
+	void SetNumSamples(int numSamples);
+
 	Layer* firstHiddenLayer = nullptr;
 	CostFunction * CostFunc;
+
+	int numClasses = 0;
 };
 

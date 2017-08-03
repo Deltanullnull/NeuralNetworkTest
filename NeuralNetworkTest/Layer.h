@@ -16,25 +16,22 @@ public:
 	~Layer();
 
 	void Init(int numInput, int numOutput);
-	void InitWeights();
-
-	void ForwardPropagate(vector<double> input, double y);
 
 	void ForwardPropagate(Eigen::VectorXd input, double y);
-
-	void BackwardPropagate(vector<double> deltas);
 
 	void BackwardPropagate(Eigen::VectorXd deltas);
 
 	void SetDeltaToZero();
 
-	void UpdateWeights(int numSamples);
+	void UpdateWeights();
 
-	void ComputeWeightedSum(vector<double> input, vector<double>& outputActivation, vector<double>& outputZ);
+	void UpdatePartialDerivative();
+
+	Eigen::VectorXd Evaluate(Eigen::VectorXd X);
+
+	double GetWeightSum();
 
 	double ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd yPred);
-
-	double ComputeLoss(vector<vector<double>> X, vector<double> y, vector<vector<double>> yPred);
 
 	void SetNumSamples(int numSamples);
 
@@ -65,5 +62,7 @@ public:
 	double epsilon = 0.01; // Regularization strength
 
 	bool isHiddenLayer = true;
+
+	int numSamples;
 };
 

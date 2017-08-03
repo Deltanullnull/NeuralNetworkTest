@@ -25,87 +25,26 @@ void Layer::Init(int numInput, int numOutput)
 
 		//BiasVector = Eigen::ArrayXd::Random(numOutput) * 0.5 + 0.5;
 
-		//cout << "BiasVector: " << endl;
-		//cout << BiasVector << endl;
 
-		//DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput);
+		/*cout << "BiasVector: " << endl;
+		cout << BiasVector << endl;*/
+
 		DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput + 1);
+		//DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput);
 
-		cout << "DeltaMatrix: " << endl;
-		cout << DeltaMatrix << endl;
-	
-		//PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
+
+
 		PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput + 1);
+		//PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
+
 
 		//VectorZ = Eigen::VectorXd(numOutput);
 	}
 }
 
-void Layer::InitWeights()
-{
-	int numInput = weights.size();
-
-	// randomly initialize values between 0 and 1
-	random_device rd;
-	mt19937 gen(rd());
-
-	uniform_real_distribution<> dis(0, 1);
-
-	for (int y = 0; y < numInput; y++)
-	{
-		int numOutput = weights.at(y).size();
-
-		for (int x = 0; x < numOutput; x++)
-		{
-			weights.at(y).at(x) = dis(gen);
-			Deltas.at(y).at(x) = 0;
-
-			if (y == 0)
-			{
-				bias.at(x) = dis(gen);
-			}
-		}
-	}
-}
-
-void Layer::ForwardPropagate(vector<double> input, double y)
-{
-	// TODO compute values for this layer
-	if (connectedLayer != nullptr)
-	{
-		ComputeWeightedSum(input, aVector, zVector);
-
-		// continue forward propagation on next layer
-		connectedLayer->ForwardPropagate(aVector, y);
-	}
-	else
-	{
-		// This is the last layer
-
-		// TODO compute cost function
-
-		vector<double> h;
-		
-		ComputeWeightedSum(input, h, zVector);
-
-		vector<double> yVector = vector<double>(h.size(), 0.0);
-		int yIdx = y;
-		yVector.at(yIdx) = 1.0;
-
-		vector<double> deltas = MathOperations::VectorSubtraction(h, yVector);
-
-		previousLayer->BackwardPropagate(deltas);
-	}
-	
-
-}
-
 void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 {
-	
-	
-
-	cout << "Going to next layer" << endl;
+	//cout << "Going to next layer" << endl;
 
 	if (previousLayer == nullptr)
 	{
@@ -115,25 +54,50 @@ void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 			exit(-1);
 		}
 
-		ActivationVector = input;
-	}
-	else
-	{
 		Eigen::VectorXd InputWithBias(input.rows() + 1);
 
-		InputWithBias[0] = +1;
+		InputWithBias[0] = +1; // Set constant to 1
 
 		for (int i = 0; i < input.rows(); i++)
 		{
 			InputWithBias[i + 1] = input[i];
 		}
 
+		ActivationVector = InputWithBias;
+
+
+	}
+	else
+	{
+		
+		
 		// z = W * x + b
+		VectorZ = previousLayer->WeightMatrix * input;
 		//VectorZ = previousLayer->WeightMatrix * input + previousLayer->BiasVector;
-		VectorZ = previousLayer->WeightMatrix * InputWithBias;
 
 		// a = g(z)
-		ActivationVector = Func->Compute(VectorZ);
+
+		if (connectedLayer != nullptr)
+		{
+			Eigen::VectorXd TempActivation = Func->Compute(VectorZ);
+
+
+			ActivationVector = Eigen::VectorXd(TempActivation.rows() + 1);
+
+
+			ActivationVector[0] = +1;
+
+
+			for (int i = 0; i < TempActivation.rows(); i++)
+			{
+				ActivationVector[i + 1] = TempActivation[i];
+			}
+		}
+		else
+		{
+			ActivationVector = Func->Compute(VectorZ);
+		}
+
 	}
 
 	
@@ -144,6 +108,8 @@ void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 	}
 	else
 	{
+
+
 		Eigen::VectorXd VectorY = Eigen::VectorXd::Zero(ActivationVector.rows());
 
 		VectorY((int)y) = 1.0;
@@ -155,31 +121,11 @@ void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 	
 }
 
-void Layer::BackwardPropagate(vector<double> deltas)
-{
-	vector<double> deltasCurrent;
-
-	deltasCurrent = MathOperations::MatrixMultiplication(weights, deltas, true);
-
-	vector<double> gDeriv = Func->Derivative(zVector);
-
-	deltasCurrent = MathOperations::ElementwiseMultiplication(deltasCurrent, gDeriv);
-
-	vector<vector<double>> Temp = MathOperations::VectorMultiplication(deltas, aVector);
-
-	Deltas = MathOperations::MatrixAddition(Deltas, Temp);
-
-	
-	if (previousLayer != nullptr)
-	{
-		previousLayer->BackwardPropagate(deltasCurrent);
-	}
-
-}
-
 void Layer::BackwardPropagate(Eigen::VectorXd deltas)
 {
-	DeltaMatrix = DeltaMatrix + deltas * ActivationVector.transpose();
+	Eigen::MatrixXd TempMatrix = deltas * ActivationVector.transpose();
+
+	DeltaMatrix = DeltaMatrix + TempMatrix;
 
 	PartialDerivatives = (DeltaMatrix + regLambda * WeightMatrix);
 
@@ -187,11 +133,23 @@ void Layer::BackwardPropagate(Eigen::VectorXd deltas)
 	{
 		Eigen::VectorXd DeltasCurrent = WeightMatrix.transpose() * deltas;
 
-		Eigen::VectorXd gDeriv = Func->Derivative(VectorZ);
+		//Eigen::VectorXd gDeriv = Func->Derivative(VectorZ);
+		Eigen::VectorXd gDeriv = ActivationVector.cwiseProduct(Eigen::VectorXd::Ones(ActivationVector.rows()) - ActivationVector);
 
 		DeltasCurrent = DeltasCurrent.cwiseProduct(gDeriv);
 
-		previousLayer->BackwardPropagate(DeltasCurrent);
+		// TODO remove first value
+		Eigen::VectorXd DeltasTemp(DeltasCurrent.rows() - 1);
+
+		for (int i = 0; i < DeltasTemp.rows(); i++)
+		{
+			DeltasTemp[i] = DeltasCurrent[i + 1];
+		}
+
+		UpdatePartialDerivative();
+
+		previousLayer->BackwardPropagate(DeltasTemp);
+		//previousLayer->BackwardPropagate(DeltasCurrent);
 	}
 }
 
@@ -205,33 +163,122 @@ void Layer::SetDeltaToZero()
 	}
 }
 
-void Layer::UpdateWeights(int numSamples)
+void Layer::UpdateWeights()
 {
-	PartialDerivatives = PartialDerivatives / (double) numSamples;
-
 	WeightMatrix = WeightMatrix - epsilon * PartialDerivatives;
 
 	if (connectedLayer != nullptr)
-		connectedLayer->UpdateWeights(numSamples);
+		connectedLayer->UpdateWeights();
 }
 
-void Layer::ComputeWeightedSum(vector<double> input, vector<double>& outputActivation, vector<double>& outputZ)
+void Layer::UpdatePartialDerivative()
 {
-	vector<double> output;
-	
-	int numOutput = weights.size();
-	int numCols = input.size();
+	if (numSamples == 0)
+	{
+		cout << "Error! Num Samples <= 0!" << endl;
+	}
 
-	output.resize(numOutput);
-
-	// z = W * x + b
-	outputZ = MathOperations::MatrixMultiplication(weights, input, false);
-	outputZ = MathOperations::VectorAddition(outputZ, bias);
-
-	// a = g(z)
-	outputActivation = Func->Compute(outputZ);
-
+	for (int i = 0; i < PartialDerivatives.rows(); i++)
+	{
+		for (int j = 0; j < PartialDerivatives.cols(); j++)
+		{
+			if (j == 0)
+			{
+				PartialDerivatives(i, j) = DeltaMatrix(i, j) / numSamples;
+			}
+			else
+			{
+				PartialDerivatives(i, j) = (DeltaMatrix(i, j) + regLambda * WeightMatrix(i, j))/ numSamples;
+			}
+		}
+	}
 }
+
+Eigen::VectorXd Layer::Evaluate(Eigen::VectorXd input)
+{
+	Eigen::VectorXd Output;
+
+	if (previousLayer == nullptr)
+	{
+		if (input.rows() + 1 != WeightMatrix.cols())
+		{
+			cerr << "Error! Data input size does not match layer input size. Abort!" << endl;
+			exit(-1);
+		}
+
+		Eigen::VectorXd InputWithBias(input.rows() + 1);
+
+
+		InputWithBias[0] = +1; // Set constant to 1
+
+		for (int i = 0; i < input.rows(); i++)
+		{
+			InputWithBias[i + 1] = input[i];
+		}
+
+		Output = InputWithBias;
+
+		if (connectedLayer != nullptr)
+		{
+			return connectedLayer->Evaluate(Output);
+		}
+	}
+	else
+	{
+
+
+		// z = W * x + b
+		Eigen::VectorXd Z = previousLayer->WeightMatrix * input;
+		
+		// a = g(z)
+
+		if (connectedLayer != nullptr)
+		{
+			Eigen::VectorXd TempActivation = Func->Compute(Z);
+
+			Output = Eigen::VectorXd(TempActivation.rows() + 1);
+
+			Output[0] = +1;
+
+			for (int i = 0; i < TempActivation.rows(); i++)
+			{
+				Output[i + 1] = TempActivation[i];
+			}
+
+			return connectedLayer->Evaluate(Output);
+		}
+		else
+		{
+			return Func->Compute(Z);
+		}
+
+	}
+
+	return Output;
+}
+
+double Layer::GetWeightSum()
+{
+	double val = 0.0;
+
+	for (int i = 0; i < WeightMatrix.rows(); i++)
+	{
+		for (int j = 0; j < WeightMatrix.cols(); j++)
+		{
+			val += pow(WeightMatrix(i, j), 2);
+		}
+	}
+
+	if (connectedLayer != nullptr)
+	{
+		
+
+		val += connectedLayer->GetWeightSum();
+	}
+
+	return val;
+}
+
 
 double Layer::ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd yPred)
 {
@@ -252,13 +299,14 @@ double Layer::ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd 
 	for (int i = 0; i < yPred.rows(); i++)
 	{
 		// a = g(z)
-		//newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i) + BiasVector);
 		newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i));
+		//newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i) + BiasVector);
+
 	}
 
 	if (connectedLayer != nullptr)
 	{
-		value += ComputeLoss(X, y, newPred);
+		value += connectedLayer->ComputeLoss(X, y, newPred);
 	}
 	else
 	{
@@ -282,64 +330,12 @@ double Layer::ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd 
 	return value;
 }
 
-double Layer::ComputeLoss(vector<vector<double>> X, vector<double> y, vector<vector<double>> yPred)
-{
-	double lambda = 0.01;
-
-	double value = 0.0;
-
-	for (int v = 0; v < weights.size(); v++)
-	{
-		for (int u = 0; u < weights.at(v).size(); u++)
-		{
-			double theta = weights.at(v).at(u);
-
-			value += (lambda / 2.0) * pow(theta, 2.0);
-		}
-	}
-
-	//yPred = MathOperations::MatrixMultiplication
-
-	// compute prediction of y
-	vector<vector<double>> newPred;
-
-	for (int idx = 0; idx < yPred.size(); idx++)
-	{
-		vector<double> activation, z;
-
-		ComputeWeightedSum(yPred.at(idx), activation, z);
-
-		newPred.push_back(activation);
-	}
-
-	if (connectedLayer != nullptr)
-	{
-		value += connectedLayer->ComputeLoss(X, y, newPred);
-	}
-	else
-	{
-		for (int v = 0; v < newPred.size(); v++)
-		{
-			vector<double> yPredVector = newPred.at(v);
-
-			int numClasses = newPred.size();
-
-			vector<double> yTrueVector(numClasses, 0);
-			yTrueVector.at(y.at(v)) = 1.0;
-
-			for (int u = 0; u < numClasses; u++)
-			{
-				value += yTrueVector.at(u) * log(yPredVector.at(u)) + (1.0 - yTrueVector.at(u)) * log(1.0 - yPredVector.at(u));
-			}
-		}
-	}
-
-	
-
-	return value;
-}
 
 void Layer::SetNumSamples(int numSamples)
 {
-	
+	this->numSamples = numSamples;
+	if (connectedLayer != nullptr)
+	{
+		connectedLayer->SetNumSamples(numSamples);
+	}
 }
