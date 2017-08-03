@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Sigmoid.h"
-#include "Neuron.h"
 
 #include <iostream>
 
@@ -38,6 +37,10 @@ public:
 	double ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd yPred);
 
 	void SetNumSamples(int numSamples);
+
+	void SetLambda(double lambda);
+
+	void SetEpsilon(double epsilon);
 
 	
 	Eigen::MatrixXd WeightMatrix;

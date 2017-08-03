@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Layer.h"
-#include "JacobiFunction.h"
-
-
 
 class Net
 {
@@ -19,15 +16,17 @@ public:
 	Eigen::VectorXd Evaluate(Eigen::VectorXd X);
 
 	void Train(Eigen::MatrixXd X, Eigen::VectorXd y, int numEpochs = 10000);
+	double Score(Eigen::MatrixXd X, Eigen::VectorXd y);
 
 	double ComputeLossFunction(Eigen::MatrixXd X, Eigen::VectorXd y, int numClasses);
 
-	double ComputeLossFunction(vector<vector<double>> X, vector<double> y);
-
 	void SetNumSamples(int numSamples);
 
+	void SetLambda(double lambda);
+
+	void SetEpsilon(double epsilon);
+
 	Layer* firstHiddenLayer = nullptr;
-	CostFunction * CostFunc;
 
 	int numClasses = 0;
 };

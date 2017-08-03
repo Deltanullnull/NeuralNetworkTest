@@ -1,7 +1,7 @@
 #include "Net.h"
 #include "MathOperations.h"
 #include <fstream>
-
+//#include <Eigen/Permutation>
 
 int main(int argc, char ** argv)
 {
@@ -13,6 +13,9 @@ int main(int argc, char ** argv)
 	int numSamples = 0;
 
 	bool train = true;
+
+	double lambda = 0.01;
+	double epsilon = 0.01;
 
 	string modelPath = "";
 
@@ -39,16 +42,11 @@ int main(int argc, char ** argv)
 
 		numFeatures = 2;
 
-		trainingDataVector.push_back(2.0); 
-		trainingDataVector.push_back(3.0);
-		trainingDataVector.push_back(1.0); 
-		trainingDataVector.push_back(0.0);
-		trainingDataVector.push_back(1.0);
-		trainingDataVector.push_back(2.0);
-		trainingDataVector.push_back(3.0);
-		trainingDataVector.push_back(3.0);
-		trainingDataVector.push_back(0.0);
-		trainingDataVector.push_back(0.0);
+		trainingDataVector.push_back(2.0); trainingDataVector.push_back(3.0);
+		trainingDataVector.push_back(1.0); trainingDataVector.push_back(0.0);
+		trainingDataVector.push_back(1.0); trainingDataVector.push_back(2.0);
+		trainingDataVector.push_back(3.0); trainingDataVector.push_back(3.0);
+		trainingDataVector.push_back(0.0); trainingDataVector.push_back(0.0);
 
 		trainingLabels.push_back(1);
 		trainingLabels.push_back(0);
@@ -88,6 +86,23 @@ int main(int argc, char ** argv)
 			}
 
 			modelPath = argv[4];
+
+			if (train && argc > 5)
+			{ 
+				
+				if (string(argv[5]) == "lambda")
+				{
+					lambda = stod(argv[6]);
+					cout << "Lambda: " << lambda << endl;
+				}
+				if (string(argv[7]) == "epsilon")
+				{
+					epsilon = stod(argv[8]);
+					cout << "Epsilon: " << epsilon << endl;
+				}
+				
+				
+			}
 		}
 
 		ifstream csvFile(fileName);
@@ -157,7 +172,6 @@ int main(int argc, char ** argv)
 
 	Net * neuralNetwork = new Net();
 
-	
 
 	vector<int> availableLabels;
 
@@ -205,26 +219,83 @@ int main(int argc, char ** argv)
 	}
 
 
-	Eigen::Map<Eigen::VectorXd> y(trainingLabels.data(), trainingLabels.size());
+	Eigen::Map<Eigen::VectorXd> y(trainingLabels.data(), numSamples);
 
-	//cout << X << endl;
-	//cout << y << endl;
+	Eigen::MatrixXd shuffledData(numSamples, numFeatures + 1);
+
+	for (int i = 0; i < numSamples; i++)
+	{
+		for (int j = 0; j < numFeatures; j++)
+		{
+			shuffledData(i, j) = X(i, j);
+		}
+
+		shuffledData(i, numFeatures) = y(i);
+	}
+
+
+	Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> perm(X.rows());
+	perm.setIdentity();
+	random_shuffle(perm.indices().data(), perm.indices().data() + perm.indices().size());
+
+	shuffledData = perm * shuffledData;
+
+	int numValidationSet = (int)(numSamples * 0.1);
+	if (numValidationSet == 0)
+		numValidationSet = 1;
+
+	int numTrainSet = numSamples - numValidationSet;
+
+	Eigen::MatrixXd X_training(numTrainSet, numFeatures);
+	Eigen::VectorXd y_training(numTrainSet);
+
+	Eigen::MatrixXd X_validation(numValidationSet, numFeatures);
+	Eigen::VectorXd y_validation(numValidationSet);
+
+	for (int i = 0; i < numTrainSet; i++)
+	{
+		for (int j = 0; j < numFeatures; j++)
+		{
+			X_training(i, j) = shuffledData(i, j);
+		}
+
+
+		y_training(i) = shuffledData(i, numFeatures);
+	}
+
+	for (int i = 0; i < numValidationSet; i++)
+	{
+		for (int j = 0; j < numFeatures; j++)
+		{
+			X_validation(i, j) = shuffledData(numTrainSet + i, j);
+		}
+
+		y_validation(i) = shuffledData(numTrainSet + i, numFeatures);
+	}
 
 	vector<int> hiddenLayerSizes;
 
-	hiddenLayerSizes.push_back(3);
-	hiddenLayerSizes.push_back(4);
+	hiddenLayerSizes.push_back(6);
+	hiddenLayerSizes.push_back(6);
 
 	neuralNetwork->Build(numFeatures, hiddenLayerSizes, numClasses);
 
-	neuralNetwork->Train(X, y);
+	neuralNetwork->SetLambda(lambda);
+	neuralNetwork->SetEpsilon(epsilon); 
 
-	neuralNetwork->SaveAsFile("model.bin");
+	neuralNetwork->Train(X_training, y_training);
 
-	for (int i = 0; i < X.rows(); i++)
+	cout << "Training finished. Calculating score..." << endl;
+
+	cout << "Score: " << neuralNetwork->Score(X_validation, y_validation) << endl;
+
+	if (!modelPath.empty())
+		neuralNetwork->SaveAsFile(modelPath);
+
+	/*for (int i = 0; i < X.rows(); i++)
 	{
 		cout << "Result for " << X.row(i) << ":" << endl;
 		cout << neuralNetwork->Evaluate(X.row(i)) << endl;
-	}
+	}*/
 	return 0;
 }

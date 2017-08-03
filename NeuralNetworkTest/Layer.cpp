@@ -372,3 +372,23 @@ void Layer::SetNumSamples(int numSamples)
 		connectedLayer->SetNumSamples(numSamples);
 	}
 }
+
+void Layer::SetLambda(double lambda)
+{
+	this->regLambda = lambda;
+
+	if (connectedLayer != nullptr)
+	{
+		connectedLayer->SetLambda(lambda);
+	}
+}
+
+void Layer::SetEpsilon(double epsilon)
+{
+	this->epsilon = epsilon;
+
+	if (connectedLayer != nullptr)
+	{
+		connectedLayer->SetLambda(epsilon);
+	}
+}

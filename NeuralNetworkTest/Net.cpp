@@ -146,6 +146,41 @@ void Net::Train(Eigen::MatrixXd X, Eigen::VectorXd y, int numEpochs)
 	}
 }
 
+double Net::Score(Eigen::MatrixXd X, Eigen::VectorXd y)
+{
+	double score = 0.0;
+
+	if (firstHiddenLayer != nullptr)
+	{
+		for (int i = 0; i < X.rows(); i++)
+		{
+			Eigen::VectorXd yPredVector = firstHiddenLayer->Evaluate(X.row(i));
+			
+			// Get index of max
+
+			double yPred = 0.0;
+			int maxIdx = 0;
+
+			for (int j = 0; j < yPredVector.rows(); j++)
+			{
+				if (yPredVector(j) > yPred)
+				{
+					yPred = yPredVector(j);
+					maxIdx = j;
+				}
+			}
+
+			if (maxIdx == (int)(y(i)))
+			{
+				score += 1.0;
+			}
+
+		}
+	}
+
+	return score / X.rows();
+}
+
 double Net::ComputeLossFunction(Eigen::MatrixXd X, Eigen::VectorXd y, int numClasses)
 {
 	int numSamples = X.rows();
@@ -181,20 +216,24 @@ double Net::ComputeLossFunction(Eigen::MatrixXd X, Eigen::VectorXd y, int numCla
 	return 1e10;
 }
 
-double Net::ComputeLossFunction(vector<vector<double>> X, vector<double> y)
-{
-	double cost = 0.0;
-	int numSamples = X.size();
-
-	if (firstHiddenLayer != nullptr)
-	{
-		//cost = firstHiddenLayer->ComputeLoss(X, y, X);
-	}
-
-	return cost / numSamples;
-}
 
 void Net::SetNumSamples(int numSamples)
 {
 	firstHiddenLayer->SetNumSamples(numSamples);
+}
+
+void Net::SetLambda(double lambda)
+{
+	if (firstHiddenLayer != nullptr)
+	{
+		firstHiddenLayer->SetLambda(lambda);
+	}
+}
+
+void Net::SetEpsilon(double epsilon)
+{
+	if (firstHiddenLayer != nullptr)
+	{
+		firstHiddenLayer->SetEpsilon(epsilon);
+	}
 }
