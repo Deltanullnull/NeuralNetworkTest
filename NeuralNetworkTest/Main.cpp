@@ -1,6 +1,5 @@
 #include "Net.h"
 #include "MathOperations.h"
-//#include <iostream>
 #include <fstream>
 
 int main(int argc, char ** argv)
@@ -12,6 +11,22 @@ int main(int argc, char ** argv)
 	int numClasses = 0;
 	int numFeatures = 0;
 	int numSamples = 0;
+
+	/*FILE * pipe = _popen("gnuplot", "w");
+
+	if (pipe != nullptr)
+	{
+		fprintf(pipe, "set term win\n");
+		fprintf(pipe, "plot(x, sin(x))\n");
+		fprintf(pipe, "set term pngcairo\n");
+		fprintf(pipe, "set output \"myFile.png\"\n");
+		fprintf(pipe, "replot\n");
+		fprintf(pipe, "set term win\n");
+		fflush(pipe);
+	}
+	_pclose(pipe);
+
+	exit(1);*/
 
 	if (argc < 2)
 	{
@@ -39,6 +54,8 @@ int main(int argc, char ** argv)
 	}
 	else
 	{
+		vector<string> trainingLabelNames;
+
 		string csvFileName(argv[1]);
 
 		if (csvFileName.find(".csv") == string::npos)
@@ -69,27 +86,39 @@ int main(int argc, char ** argv)
 
 			int i = 0;
 
-			vector<double> sample;
+			vector<string> sample;
 
 			while (getline(stream, token, ','))
 			{
-				double val = stod(token);
+				
+				//double val = stod(token);
 
-				cout << "Value: " << val << endl;
+				cout << "Value: " << token << endl;
 
-				if (i == 0)
+				sample.push_back(token);
+
+				/*if (i == 0)
 				{
 					trainingLabels.push_back(val);
 				}
 				else
 				{
 					trainingDataVector.push_back(val);
-				}
+				}*/
 
 				i++;
 
-
 			}
+
+			for (int i = 0; i < sample.size() - 1; i++)
+			{
+				double val = stod(sample.at(i));
+
+				trainingDataVector.push_back(val);
+			}
+
+			trainingLabelNames.push_back(*sample.end());
+
 
 			if (numFeatures == 0)
 				numFeatures = trainingDataVector.size();

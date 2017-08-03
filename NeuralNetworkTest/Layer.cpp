@@ -138,7 +138,7 @@ void Layer::BackwardPropagate(Eigen::VectorXd deltas)
 
 		DeltasCurrent = DeltasCurrent.cwiseProduct(gDeriv);
 
-		// TODO remove first value
+		// remove first value
 		Eigen::VectorXd DeltasTemp(DeltasCurrent.rows() - 1);
 
 		for (int i = 0; i < DeltasTemp.rows(); i++)
