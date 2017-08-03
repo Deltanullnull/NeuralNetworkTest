@@ -2,10 +2,9 @@
 #include <random>
 #include "MathOperations.h"
 
-Layer::Layer(bool isHiddenLayer)
+Layer::Layer()
 {
 	Func = new Sigmoid();
-	this->isHiddenLayer = isHiddenLayer;
 }
 
 
@@ -17,35 +16,80 @@ void Layer::Init(int numInput, int numOutput)
 {
 	if (numOutput > 0)
 	{
-		//WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput) * 0.5 + 0.5;
 		WeightMatrix = Eigen::ArrayXXd::Random(numOutput, numInput + 1) * 0.5 + 0.5;
 
-		cout << "WeightMatrix: " << endl;
-		cout << WeightMatrix << endl;
-
-		//BiasVector = Eigen::ArrayXd::Random(numOutput) * 0.5 + 0.5;
-
-
-		/*cout << "BiasVector: " << endl;
-		cout << BiasVector << endl;*/
-
 		DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput + 1);
-		//DeltaMatrix = Eigen::MatrixXd::Zero(numOutput, numInput);
-
-
 
 		PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput + 1);
-		//PartialDerivatives = Eigen::MatrixXd::Zero(numOutput, numInput);
-
-
-		//VectorZ = Eigen::VectorXd(numOutput);
 	}
+}
+
+vector<double> Layer::GetLayerInfo()
+{
+	vector<double> buffer;
+
+	if (WeightMatrix.size() == 0)
+		return buffer;
+
+	buffer.push_back(WeightMatrix.rows());
+	buffer.push_back(WeightMatrix.cols());
+
+	//string content = to_string(WeightMatrix.rows()) + to_string(WeightMatrix.cols());
+
+	for (int i = 0; i < WeightMatrix.rows(); i++)
+	{
+		for (int j = 0; j < WeightMatrix.cols(); j++)
+		{
+			buffer.push_back(WeightMatrix(i, j));
+			//content += WeightMatrix(i, j);
+		}
+	}
+
+	if (connectedLayer != nullptr)
+	{
+		vector<double> bufferNext = connectedLayer->GetLayerInfo();
+
+
+		buffer.insert(buffer.end(), bufferNext.begin(), bufferNext.end());
+
+		//content += connectedLayer->GetLayerInfo();
+	}
+
+	return buffer;
+}
+
+void Layer::FillWeights(vector<double> weightBuffer, int currentIdx)
+{
+	int rows = weightBuffer[currentIdx];
+	int cols = weightBuffer[currentIdx + 1];
+
+	currentIdx += 2;
+
+	WeightMatrix = Eigen::MatrixXd(rows, cols);
+
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			WeightMatrix(i, j) = weightBuffer.at(i * cols + j + currentIdx);
+		}
+	}
+
+	currentIdx += rows * cols;
+
+	connectedLayer = new Layer();
+	connectedLayer->previousLayer = this;
+
+	if (currentIdx < weightBuffer.size() - 1)
+	{
+		
+		connectedLayer->FillWeights(weightBuffer, currentIdx);
+	}
+
 }
 
 void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 {
-	//cout << "Going to next layer" << endl;
-
 	if (previousLayer == nullptr)
 	{
 		if (input.rows() + 1 != WeightMatrix.cols())
@@ -73,10 +117,8 @@ void Layer::ForwardPropagate(Eigen::VectorXd input, double y)
 		
 		// z = W * x + b
 		VectorZ = previousLayer->WeightMatrix * input;
-		//VectorZ = previousLayer->WeightMatrix * input + previousLayer->BiasVector;
 
 		// a = g(z)
-
 		if (connectedLayer != nullptr)
 		{
 			Eigen::VectorXd TempActivation = Func->Compute(VectorZ);
@@ -133,7 +175,6 @@ void Layer::BackwardPropagate(Eigen::VectorXd deltas)
 	{
 		Eigen::VectorXd DeltasCurrent = WeightMatrix.transpose() * deltas;
 
-		//Eigen::VectorXd gDeriv = Func->Derivative(VectorZ);
 		Eigen::VectorXd gDeriv = ActivationVector.cwiseProduct(Eigen::VectorXd::Ones(ActivationVector.rows()) - ActivationVector);
 
 		DeltasCurrent = DeltasCurrent.cwiseProduct(gDeriv);
@@ -149,7 +190,6 @@ void Layer::BackwardPropagate(Eigen::VectorXd deltas)
 		UpdatePartialDerivative();
 
 		previousLayer->BackwardPropagate(DeltasTemp);
-		//previousLayer->BackwardPropagate(DeltasCurrent);
 	}
 }
 
@@ -225,13 +265,10 @@ Eigen::VectorXd Layer::Evaluate(Eigen::VectorXd input)
 	}
 	else
 	{
-
-
 		// z = W * x + b
 		Eigen::VectorXd Z = previousLayer->WeightMatrix * input;
 		
 		// a = g(z)
-
 		if (connectedLayer != nullptr)
 		{
 			Eigen::VectorXd TempActivation = Func->Compute(Z);
@@ -271,8 +308,6 @@ double Layer::GetWeightSum()
 
 	if (connectedLayer != nullptr)
 	{
-		
-
 		val += connectedLayer->GetWeightSum();
 	}
 
@@ -300,8 +335,6 @@ double Layer::ComputeLoss(Eigen::MatrixXd X, Eigen::VectorXd y, Eigen::MatrixXd 
 	{
 		// a = g(z)
 		newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i));
-		//newPred.row(i) = Func->Compute(WeightMatrix * yPred.row(i) + BiasVector);
-
 	}
 
 	if (connectedLayer != nullptr)

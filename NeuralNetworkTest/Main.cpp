@@ -2,15 +2,19 @@
 #include "MathOperations.h"
 #include <fstream>
 
+
 int main(int argc, char ** argv)
 {
-	//vector<vector<double>> trainingDataVector;
 	vector<double> trainingDataVector;
 	vector<double> trainingLabels;
 
 	int numClasses = 0;
 	int numFeatures = 0;
 	int numSamples = 0;
+
+	bool train = true;
+
+	string modelPath = "";
 
 	/*FILE * pipe = _popen("gnuplot", "w");
 
@@ -55,18 +59,38 @@ int main(int argc, char ** argv)
 	else
 	{
 		vector<string> trainingLabelNames;
+		vector<string> labelNameMap;
 
-		string csvFileName(argv[1]);
+		string mode(argv[1]);
 
-		if (csvFileName.find(".csv") == string::npos)
+		if (mode == "train")
+			train = true;
+		else if (mode == "test")
+			train = false;
+		else
 		{
-			cout << "File is not a csv file. Please provide a csv file." << endl;
-			exit(-1);
+			cout << "Input goes like this: NeuralNetworkTest.ext train|test PATH_TO_YOUR_TRAINING_DATA [model PATH_TO_MODEL]" << endl;
+			exit(0);
 		}
 
-		cout << "CSV file " << csvFileName << " loaded." << endl;
+		string fileName(argv[2]);
 
-		ifstream csvFile(csvFileName);
+		cout << "Training data " << fileName << " loaded." << endl;
+
+		if (argc > 3)
+		{
+			cout << argv[3] << endl;
+
+			if (string(argv[3]) != "model")
+			{
+				cout << "Input goes like this: NeuralNetworkTest.ext train|test PATH_TO_YOUR_TRAINING_DATA [model PATH_TO_MODEL]" << endl;
+				exit(0);
+			}
+
+			modelPath = argv[4];
+		}
+
+		ifstream csvFile(fileName);
 
 		if (!csvFile)
 		{
@@ -80,7 +104,8 @@ int main(int argc, char ** argv)
 		{
 			string token;
 
-			cout << "Reading line " << line << endl;
+			if (line.empty())
+				break;
 
 			istringstream stream(line);
 
@@ -90,24 +115,9 @@ int main(int argc, char ** argv)
 
 			while (getline(stream, token, ','))
 			{
-				
-				//double val = stod(token);
-
-				cout << "Value: " << token << endl;
-
 				sample.push_back(token);
 
-				/*if (i == 0)
-				{
-					trainingLabels.push_back(val);
-				}
-				else
-				{
-					trainingDataVector.push_back(val);
-				}*/
-
 				i++;
-
 			}
 
 			for (int i = 0; i < sample.size() - 1; i++)
@@ -117,7 +127,14 @@ int main(int argc, char ** argv)
 				trainingDataVector.push_back(val);
 			}
 
-			trainingLabelNames.push_back(*sample.end());
+			string labelName = *(sample.end() - 1);
+
+			trainingLabelNames.push_back(labelName);
+
+			if (find(labelNameMap.begin(), labelNameMap.end(), labelName) == labelNameMap.end())
+			{
+				labelNameMap.push_back(labelName);
+			}
 
 
 			if (numFeatures == 0)
@@ -125,9 +142,22 @@ int main(int argc, char ** argv)
 
 		}
 
+		for (int i = 0; i < trainingLabelNames.size(); i++)
+		{
+			for (int j = 0; j < labelNameMap.size(); j++)
+			{
+				if (trainingLabelNames.at(i) == labelNameMap.at(j))
+				{
+					trainingLabels.push_back(j);
+					break;
+				}
+			}
+		}
 	}
 
 	Net * neuralNetwork = new Net();
+
+	
 
 	vector<int> availableLabels;
 
@@ -142,8 +172,6 @@ int main(int argc, char ** argv)
 	}
 
 	numClasses = availableLabels.size();
-
-
 
 	numSamples = trainingDataVector.size() / numFeatures;
 
@@ -163,20 +191,35 @@ int main(int argc, char ** argv)
 		}
 	}
 
+	if (!train)
+	{
+		neuralNetwork->ReadFromFile(modelPath);
+
+		for (int i = 0; i < X.rows(); i++)
+		{
+			cout << "Result for " << X.row(i) << ":" << endl;
+			cout << neuralNetwork->Evaluate(X.row(i)) << endl;
+		}
+
+		exit(0);
+	}
+
+
 	Eigen::Map<Eigen::VectorXd> y(trainingLabels.data(), trainingLabels.size());
 
-	cout << X << endl;
-
-	cout << y << endl;
+	//cout << X << endl;
+	//cout << y << endl;
 
 	vector<int> hiddenLayerSizes;
 
-	hiddenLayerSizes.push_back(5);
-	hiddenLayerSizes.push_back(5);
+	hiddenLayerSizes.push_back(3);
+	hiddenLayerSizes.push_back(4);
 
 	neuralNetwork->Build(numFeatures, hiddenLayerSizes, numClasses);
 
 	neuralNetwork->Train(X, y);
+
+	neuralNetwork->SaveAsFile("model.bin");
 
 	for (int i = 0; i < X.rows(); i++)
 	{

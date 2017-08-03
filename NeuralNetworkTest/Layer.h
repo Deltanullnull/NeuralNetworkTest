@@ -12,10 +12,14 @@ using namespace std;
 class Layer
 {
 public:
-	Layer(bool isHiddenLayer);
+	Layer();
 	~Layer();
 
 	void Init(int numInput, int numOutput);
+
+	vector<double> GetLayerInfo();
+
+	void FillWeights(vector<double> weightBuffer, int currentIdx);
 
 	void ForwardPropagate(Eigen::VectorXd input, double y);
 
@@ -37,21 +41,12 @@ public:
 
 	
 	Eigen::MatrixXd WeightMatrix;
-	//Eigen::VectorXd BiasVector;
 
 	Eigen::VectorXd VectorZ;
 	Eigen::VectorXd ActivationVector;
 
 	Eigen::MatrixXd DeltaMatrix;
 	Eigen::MatrixXd PartialDerivatives;
-
-	vector<vector<double>> weights;
-	vector<double> bias;
-
-	vector<double> zVector;
-	vector<double> aVector;
-
-	vector<vector<double>> Deltas;
 
 	Layer* connectedLayer = nullptr;
 	Layer * previousLayer = nullptr;

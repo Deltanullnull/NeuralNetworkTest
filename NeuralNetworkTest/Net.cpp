@@ -11,6 +11,51 @@ Net::~Net()
 {
 }
 
+void Net::ReadFromFile(string fileName)
+{
+	FILE * file;
+
+	fopen_s(&file, fileName.c_str(), "rb");
+
+	if (file)
+	{
+		fseek(file, 0L, SEEK_END);
+		size_t fileSize = ftell(file);
+
+		rewind(file);
+
+		int numValues = fileSize / sizeof(double);
+
+		vector<double> values(numValues, 0);
+
+		fread_s(values.data(), fileSize, sizeof(double), numValues, file);
+
+		fclose(file);
+
+		firstHiddenLayer = new Layer();
+		firstHiddenLayer->FillWeights(values, 0);
+	}
+}
+
+void Net::SaveAsFile(string fileName)
+{
+	FILE * file;
+	
+	fopen_s(&file, fileName.c_str(), "wb");
+
+	if (file)
+	{
+		if (firstHiddenLayer != nullptr)
+		{
+			vector<double> layerInfo = firstHiddenLayer->GetLayerInfo();
+
+			fwrite(layerInfo.data(), sizeof(double), layerInfo.size(), file);
+		}
+
+		fclose(file);
+	}
+}
+
 void Net::Build(int numInput, vector<int> layerSizes, int numClasses)
 {
 	Layer * current = nullptr;
@@ -21,14 +66,14 @@ void Net::Build(int numInput, vector<int> layerSizes, int numClasses)
 
 	int numOutput = layerSizes.at(0);
 
-	firstHiddenLayer = new Layer(true);
+	firstHiddenLayer = new Layer();
 	firstHiddenLayer->Init(numInput, numOutput);
 
 	current = firstHiddenLayer;
 
 	for (int i = 0; i < numHiddenLayers - 1; i++)
 	{
-		Layer * connected = new Layer(true);
+		Layer * connected = new Layer();
 		numInput = layerSizes.at(i);
 		numOutput = layerSizes.at(i + 1);
 		connected->Init(numInput, numOutput);
@@ -39,7 +84,7 @@ void Net::Build(int numInput, vector<int> layerSizes, int numClasses)
 		current = connected;
 	}
 
-	Layer * finalHiddenLayer = new Layer(true);
+	Layer * finalHiddenLayer = new Layer();
 	numInput = *(layerSizes.end() - 1);
 	numOutput = numClasses;
 
@@ -48,7 +93,7 @@ void Net::Build(int numInput, vector<int> layerSizes, int numClasses)
 	finalHiddenLayer->previousLayer = current;
 
 
-	Layer * finalLayer = new Layer(true);
+	Layer * finalLayer = new Layer();
 	numInput = numClasses;
 	numOutput = -1;
 

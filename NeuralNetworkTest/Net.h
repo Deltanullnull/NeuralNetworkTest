@@ -11,6 +11,9 @@ public:
 	Net();
 	~Net();
 
+	void ReadFromFile(string fileName);
+	void SaveAsFile(string fileName);
+
 	void Build(int numInput, vector<int> layerSizes, int numClasses);
 
 	Eigen::VectorXd Evaluate(Eigen::VectorXd X);
