@@ -1,4 +1,4 @@
-This is a vanilla implementation of a Neural Network. 
+This is a vanilla implementation of a Neural Network, based on the Machine Learning MOOC by Stanford University on Coursera (https://www.coursera.org/learn/machine-learning). 
 
 This NN consists of two hidden layers of size 6. The number of layers as well as the size of each layer can be modified within the source code.
 
