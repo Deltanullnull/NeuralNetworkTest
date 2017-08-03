@@ -21,31 +21,13 @@
     <ClCompile Include="Layer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LossFunction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Net.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Neuron.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sigmoid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CostFunction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="JacobiFunction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MathOperations.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CrossEntropyLoss.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,28 +38,13 @@
     <ClInclude Include="Layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LossFunction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Net.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Neuron.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Sigmoid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CostFunction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="JacobiFunction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MathOperations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CrossEntropyLoss.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
