@@ -1,7 +1,5 @@
 #include "Net.h"
-#include "MathOperations.h"
 #include <fstream>
-//#include <Eigen/Permutation>
 
 int main(int argc, char ** argv)
 {
@@ -18,22 +16,6 @@ int main(int argc, char ** argv)
 	double epsilon = 0.01;
 
 	string modelPath = "";
-
-	/*FILE * pipe = _popen("gnuplot", "w");
-
-	if (pipe != nullptr)
-	{
-		fprintf(pipe, "set term win\n");
-		fprintf(pipe, "plot(x, sin(x))\n");
-		fprintf(pipe, "set term pngcairo\n");
-		fprintf(pipe, "set output \"myFile.png\"\n");
-		fprintf(pipe, "replot\n");
-		fprintf(pipe, "set term win\n");
-		fflush(pipe);
-	}
-	_pclose(pipe);
-
-	exit(1);*/
 
 	if (argc < 2)
 	{
@@ -205,7 +187,7 @@ int main(int argc, char ** argv)
 		}
 	}
 
-	if (!train)
+	if (!train) // Testing data
 	{
 		neuralNetwork->ReadFromFile(modelPath);
 
@@ -275,6 +257,9 @@ int main(int argc, char ** argv)
 
 	vector<int> hiddenLayerSizes;
 
+	// LAYERS are defined here. More can be added (or reduced) by 
+	//		hiddenLayerSizes.push_back(layer_size)
+
 	hiddenLayerSizes.push_back(6);
 	hiddenLayerSizes.push_back(6);
 
@@ -292,10 +277,5 @@ int main(int argc, char ** argv)
 	if (!modelPath.empty())
 		neuralNetwork->SaveAsFile(modelPath);
 
-	/*for (int i = 0; i < X.rows(); i++)
-	{
-		cout << "Result for " << X.row(i) << ":" << endl;
-		cout << neuralNetwork->Evaluate(X.row(i)) << endl;
-	}*/
 	return 0;
 }

@@ -1,6 +1,5 @@
 #include "Layer.h"
 #include <random>
-#include "MathOperations.h"
 
 Layer::Layer()
 {
@@ -34,14 +33,11 @@ vector<double> Layer::GetLayerInfo()
 	buffer.push_back(WeightMatrix.rows());
 	buffer.push_back(WeightMatrix.cols());
 
-	//string content = to_string(WeightMatrix.rows()) + to_string(WeightMatrix.cols());
-
 	for (int i = 0; i < WeightMatrix.rows(); i++)
 	{
 		for (int j = 0; j < WeightMatrix.cols(); j++)
 		{
 			buffer.push_back(WeightMatrix(i, j));
-			//content += WeightMatrix(i, j);
 		}
 	}
 
@@ -49,21 +45,18 @@ vector<double> Layer::GetLayerInfo()
 	{
 		vector<double> bufferNext = connectedLayer->GetLayerInfo();
 
-
 		buffer.insert(buffer.end(), bufferNext.begin(), bufferNext.end());
-
-		//content += connectedLayer->GetLayerInfo();
 	}
 
 	return buffer;
 }
 
-void Layer::FillWeights(vector<double> weightBuffer, int currentIdx)
+void Layer::FillWeights(vector<double> weightBuffer, int start)
 {
-	int rows = weightBuffer[currentIdx];
-	int cols = weightBuffer[currentIdx + 1];
+	int rows = weightBuffer[start];
+	int cols = weightBuffer[start + 1];
 
-	currentIdx += 2;
+	start += 2;
 
 	WeightMatrix = Eigen::MatrixXd(rows, cols);
 
@@ -71,19 +64,19 @@ void Layer::FillWeights(vector<double> weightBuffer, int currentIdx)
 	{
 		for (int j = 0; j < cols; j++)
 		{
-			WeightMatrix(i, j) = weightBuffer.at(i * cols + j + currentIdx);
+			WeightMatrix(i, j) = weightBuffer.at(i * cols + j + start);
 		}
 	}
 
-	currentIdx += rows * cols;
+	start += rows * cols;
 
 	connectedLayer = new Layer();
 	connectedLayer->previousLayer = this;
 
-	if (currentIdx < weightBuffer.size() - 1)
+	if (start < weightBuffer.size() - 1)
 	{
 		
-		connectedLayer->FillWeights(weightBuffer, currentIdx);
+		connectedLayer->FillWeights(weightBuffer, start);
 	}
 
 }
